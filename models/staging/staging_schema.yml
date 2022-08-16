@@ -1,0 +1,4 @@
+version: 2
+models:
+  - name: stg_recharge_subscriptions
+  - name: stg_date
