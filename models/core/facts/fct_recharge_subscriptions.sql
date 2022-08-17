@@ -34,7 +34,7 @@ with {{   create_multiple_ctes_with_ref_function_macro([
         , cte__subscriptions.subscription_status
         , quantity_subscribed
         , is_prepaid
-        , subscription_properties
+        --, subscription_properties
         , is_subscription_skippable
         , is_subscription_swappable
         , is_sku_override
@@ -54,7 +54,7 @@ with {{   create_multiple_ctes_with_ref_function_macro([
         , charge_interval_frequency
         , cancellation_reason_comments
         , expire_after_specific_number_of_charges
-        , utm_params
+        --, utm_params
         , subscription_created_date
         , subscription_updated_date
         , subscription_cancelled_date

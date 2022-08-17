@@ -4,4 +4,4 @@
     ) 
 }}
 
-{{ dbt_date.get_date_dimension("2022-04-01", "2022-04-30") }}
+{{ dbt_date.get_date_dimension("2020-10-01", "2022-08-30") }}

@@ -1,4 +1,9 @@
 version: 2
 models:
-  - name: stg_recharge_subscriptions
+  - name: stg_recharge_subscriptions  - name: table_name_here
+    tests:
+      - multiple_column_not_nullness:
+          combination_of_columns:
+            - id
+            - customer_id
   - name: stg_date

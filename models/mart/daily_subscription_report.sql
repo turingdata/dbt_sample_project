@@ -6,67 +6,38 @@ with {{   create_multiple_ctes_with_ref_function_macro([
 ])
 }}
 
-,new_customers as(
-    select 
-        cte__date.date_id
-        , count(cte__subscriptions.subscription_id) as subscriptions_new
-from cte__date
-left join cte__subscriptions on cte__date.date_id=cte__subscriptions.subscription_created_date
-group by 1
+,daily_subscriptions as (
+    with daily_status as (
+        select 
+            cte__date.date_id
+            , cte__subscriptions.*
+            , case 
+                when cte__subscriptions.subscription_cancelled_date=cte__date.date_id then 'CANCELLED' 
+            else 'ACTIVE' end 
+            as subscription_daily_status
+        from cte__date
+        left join cte__subscriptions 
+            on cte__date.date_id between cte__subscriptions.first_day_active and cte__subscriptions.last_day_active
+    )
+    select
+        daily_status.*
+        , case 
+            when daily_status.date_id=daily_status.subscription_created_date then 1 else 0
+          end as is_subscription_new
+        , case 
+            when daily_status.date_id=daily_status.subscription_cancelled_date then 1 else 0
+          end as is_subscription_cancelled
+        , case 
+            when daily_status.subscription_daily_status='ACTIVE' then 1 else 0
+          end as is_subscription_active
+    from daily_status
 )
 
-,previous_customers as (
-  select distinct 
-    customer_id
-  from cte__subscriptions
-  where 1=1
-    and subscription_status = 'CANCELLED'
-)
-
-,returning_subscriptions as(
-    select 
-        cte__date.date_id
-        , count(cte__subscriptions.subscription_id) as subscriptions_returning
-    from cte__date
-    left join cte__subscriptions on cte__date.date_id=cte__subscriptions.subscription_created_date
-    where  1=1
-    and cte__subscriptions.customer_id in (select customer_id from previous_customers)
-    group by 1
-)
-
-
-, active_subscriptions as (
-    select 
-        cte__date.date_id
-        , count(cte__subscriptions.subscription_id) as subscriptions_active
-    from cte__date
-    left join cte__subscriptions on (cte__subscriptions.first_day_active <= cte__date.date_id) and (cte__date.date_id <= cte__subscriptions.last_day_active)
-    group by 1
-)
-
-, churned_subscriptions as (
-    select 
-        cte__date.date_id
-        , count(cte__subscriptions.subscription_id) as subscription_cancelled
-
-    from cte__date
-    left join cte__subscriptions on cte__date.date_id = cte__subscriptions.subscription_cancelled_date
-    group by 1
-)
 
 , final as (
   select 
-    cte__date.date_id
-    ,new_customers.subscriptions_new
-    ,returning_subscriptions.subscriptions_returning
-    ,active_subscriptions.subscriptions_active
-    , sum(churned_subscriptions.subscription_cancelled) over (order by cte__date.date_id ASC ) subscription_churned
-
-  from cte__date
-  left join new_customers on cte__date.date_id = new_customers.date_id
-  left join returning_subscriptions on cte__date.date_id = returning_subscriptions.date_id
-  left join active_subscriptions on cte__date.date_id = active_subscriptions.date_id
-  left join churned_subscriptions on cte__date.date_id = churned_subscriptions.date_id
-
+    *
+  from daily_subscriptions
+  
 )
 select * from final
